@@ -36,8 +36,9 @@ export async function analyzeRepo(repoUrl: string): Promise<RepoAnalysis> {
             contributorsCount: contributors.length,
             ...analysis
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error(error);
-        throw new Error(error.message || "Failed to analyze repository");
+        const message = error instanceof Error ? error.message : "Failed to analyze repository";
+        throw new Error(message);
     }
 }

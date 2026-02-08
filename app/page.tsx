@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RepoAnalysis } from "@/types";
-import { Loader2, Search, Github, Sparkles, Shield, Zap } from "lucide-react";
+import { Loader2, Search, Github, Sparkles, Shield, Zap, type LucideIcon } from "lucide-react";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 
 import { analyzeRepo } from "@/lib/analyzer";
@@ -26,8 +26,8 @@ export default function Home() {
     try {
       const data = await analyzeRepo(url);
       setAnalysis(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -188,7 +188,7 @@ function FeatureCard({
   description,
   delay
 }: {
-  icon: any;
+  icon: LucideIcon;
   title: string;
   description: string;
   delay: string;
