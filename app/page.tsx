@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RepoAnalysis } from "@/types";
-import { Loader2, Search, Github, Sparkles, Shield, Zap } from "lucide-react";
+import { Loader2, Search, Github, Sparkles, Shield, Zap, LucideIcon } from "lucide-react";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 
 import { analyzeRepo } from "@/lib/analyzer";
@@ -188,7 +188,7 @@ function FeatureCard({
   description,
   delay
 }: {
-  icon: any;
+  icon: LucideIcon;
   title: string;
   description: string;
   delay: string;
