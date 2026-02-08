@@ -1,4 +1,4 @@
-import { RepoDetails, Contributor, RepoContent } from "@/types";
+import { RepoDetails, Contributor } from "@/types";
 
 const GITHUB_API_BASE = "https://api.github.com";
 
@@ -47,23 +47,45 @@ export async function fetchRepoDetails(owner: string, name: string): Promise<Rep
     };
 }
 
+interface GitHubContributor {
+    login: string;
+    contributions: number;
+    avatar_url: string;
+}
+
 export async function fetchContributors(owner: string, name: string): Promise<Contributor[]> {
     const res = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${name}/contributors?per_page=30`);
     if (!res.ok) return [];
-    const data = await res.json();
-    return data.map((c: any) => ({
+    const data = await res.json() as GitHubContributor[];
+    return data.map((c) => ({
         login: c.login,
         contributions: c.contributions,
         avatarUrl: c.avatar_url,
     }));
 }
 
+interface GitHubTreeItem {
+    path: string;
+    mode: string;
+    type: string;
+    sha: string;
+    size?: number;
+    url: string;
+}
+
+interface GitHubTreeResponse {
+    sha: string;
+    url: string;
+    tree: GitHubTreeItem[];
+    truncated: boolean;
+}
+
 export async function checkFiles(owner: string, name: string, branch: string): Promise<string[]> {
     // List root files to check for specific files like CONTRIBUTING.md, CODE_OF_CONDUCT.md
     const res = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${name}/git/trees/${branch}?recursive=0`);
     if (!res.ok) return [];
-    const data = await res.json();
-    return data.tree.map((f: any) => f.path);
+    const data = await res.json() as GitHubTreeResponse;
+    return data.tree.map((f) => f.path);
 }
 
 export async function fetchReadme(owner: string, name: string): Promise<string | null> {
