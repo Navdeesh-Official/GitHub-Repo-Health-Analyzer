@@ -3,7 +3,10 @@ import { RepoDetails, Contributor } from "@/types";
 const GITHUB_API_BASE = "https://api.github.com";
 
 export async function fetchRepoDetails(owner: string, name: string): Promise<RepoDetails> {
-    const res = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${name}`);
+    const repoPromise = fetch(`${GITHUB_API_BASE}/repos/${owner}/${name}`);
+    const lastCommitPromise = fetch(`${GITHUB_API_BASE}/repos/${owner}/${name}/commits?per_page=1`);
+
+    const [res, lastCommitRes] = await Promise.all([repoPromise, lastCommitPromise]);
 
     if (!res.ok) {
         if (res.status === 404) throw new Error("Repository not found (or private).");
@@ -14,7 +17,6 @@ export async function fetchRepoDetails(owner: string, name: string): Promise<Rep
     const data = await res.json();
 
     // Fetch last commit date separately as updatedAt refers to meta updates
-    const lastCommitRes = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${name}/commits?per_page=1`);
     let lastCommitDate = data.updated_at;
     if (lastCommitRes.ok) {
         const commitData = await lastCommitRes.json();
