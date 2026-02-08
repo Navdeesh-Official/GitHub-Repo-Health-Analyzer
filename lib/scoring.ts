@@ -6,7 +6,6 @@ export function calculateHealthScore(
     files: string[],
     readmeContent: string | null
 ): Omit<RepoAnalysis, "url" | "details" | "contributorsCount"> {
-    let score = 0;
     const breakdown: string[] = [];
 
     // 1. Documentation Quality (30 points)
@@ -16,10 +15,10 @@ export function calculateHealthScore(
     if (readmeContent) {
         docScore += 5;
         if (readmeContent.length > 1000) docScore += 5;
-        if (/# (setup|install)/i.test(readmeContent)) docScore += 5;
-        if (/# (contributing|development)/i.test(readmeContent)) docScore += 5;
+        if (/#+\s*(setup|install(?:ation)?)/i.test(readmeContent)) docScore += 5;
+        if (/#+\s*(contributing|development)/i.test(readmeContent)) docScore += 5;
     } else {
-        breakdown.push("Missing README.md");
+        breakdown.push("Missing README.md (-30 pts)");
     }
 
     if (hasLicense) docScore += 10;
