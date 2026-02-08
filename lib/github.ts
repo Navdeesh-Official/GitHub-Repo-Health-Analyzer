@@ -1,4 +1,4 @@
-import { RepoDetails, Contributor, RepoContent } from "@/types";
+import { RepoDetails, Contributor, RepoContent, GitHubTreeResponse } from "@/types";
 
 const GITHUB_API_BASE = "https://api.github.com";
 
@@ -62,8 +62,8 @@ export async function checkFiles(owner: string, name: string, branch: string): P
     // List root files to check for specific files like CONTRIBUTING.md, CODE_OF_CONDUCT.md
     const res = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${name}/git/trees/${branch}?recursive=0`);
     if (!res.ok) return [];
-    const data = await res.json();
-    return data.tree.map((f: any) => f.path);
+    const data = await res.json() as GitHubTreeResponse;
+    return data.tree.map((f) => f.path);
 }
 
 export async function fetchReadme(owner: string, name: string): Promise<string | null> {

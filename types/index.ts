@@ -56,3 +56,19 @@ export interface RepoAnalysis {
     breakdown: string[]; // Explanations
     verdict: "Beginner Friendly" | "Intermediate" | "Not Beginner Friendly";
 }
+
+export interface GitHubTreeItem {
+    path: string;
+    mode: string;
+    type: "blob" | "tree" | "commit";
+    sha: string;
+    size?: number;
+    url: string;
+}
+
+export interface GitHubTreeResponse {
+    sha: string;
+    url: string;
+    tree: GitHubTreeItem[];
+    truncated: boolean;
+}
