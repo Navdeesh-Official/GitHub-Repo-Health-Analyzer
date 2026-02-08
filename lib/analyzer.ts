@@ -19,6 +19,19 @@ export async function analyzeRepo(repoUrl: string): Promise<RepoAnalysis> {
         throw new Error("Invalid URL format. Expected github.com/owner/repo");
     }
 
+    // Validate owner and name to prevent path traversal and other injection attacks
+    // GitHub username rules: Alphanumeric and hyphens, max 39 chars, no consecutive hyphens, cannot start/end with hyphen
+    const ownerRegex = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i;
+    // GitHub repo rules: Alphanumeric, hyphens, underscores, and periods, max 100 chars
+    const nameRegex = /^[a-z\d._-]{1,100}$/i;
+
+    if (!ownerRegex.test(owner)) {
+        throw new Error("Invalid repository owner");
+    }
+    if (!nameRegex.test(name)) {
+        throw new Error("Invalid repository name");
+    }
+
     try {
         const details = await fetchRepoDetails(owner, name);
 
