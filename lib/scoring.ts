@@ -1,5 +1,13 @@
 import { RepoDetails, RepoAnalysis } from "@/types";
 
+const README_INSTALLATION_RE = /# installation/i;
+const README_SETUP_RE = /# setup/i;
+const README_USAGE_RE = /# usage/i;
+const README_SETUP_INSTALL_RE = /# (setup|install)/i;
+const README_CONTRIB_DEV_RE = /# (contributing|development)/i;
+const CONTRIBUTING_RE = /CONTRIBUTING/i;
+const CODE_OF_CONDUCT_RE = /CODE_OF_CONDUCT/i;
+
 export function calculateHealthScore(
     repo: RepoDetails,
     contributorsCount: number,
@@ -15,8 +23,8 @@ export function calculateHealthScore(
         docScore += 10; // Existence
         if (readmeContent.length > 500) docScore += 5; // Decent length
         if (readmeContent.length > 2000) docScore += 5; // Detailed
-        if (/# installation/i.test(readmeContent) || /# setup/i.test(readmeContent)) docScore += 5;
-        if (/# usage/i.test(readmeContent)) docScore += 5;
+        if (README_INSTALLATION_RE.test(readmeContent) || README_SETUP_RE.test(readmeContent)) docScore += 5;
+        if (README_USAGE_RE.test(readmeContent)) docScore += 5;
     } else {
         breakdown.push("Missing README.md (-30 pts)");
     }
@@ -39,8 +47,8 @@ export function calculateHealthScore(
     if (readmeContent) {
         docScore += 5;
         if (readmeContent.length > 1000) docScore += 5;
-        if (/# (setup|install)/i.test(readmeContent)) docScore += 5;
-        if (/# (contributing|development)/i.test(readmeContent)) docScore += 5;
+        if (README_SETUP_INSTALL_RE.test(readmeContent)) docScore += 5;
+        if (README_CONTRIB_DEV_RE.test(readmeContent)) docScore += 5;
     }
     if (hasLicense) docScore += 10;
     else breakdown.push("Missing License file");
@@ -72,8 +80,8 @@ export function calculateHealthScore(
 
     // 4. Beginner Friendliness (20 points)
     let beginnerScore = 0;
-    const CONTRIBUTING = files.find(f => /CONTRIBUTING/i.test(f));
-    const CODE_OF_CONDUCT = files.find(f => /CODE_OF_CONDUCT/i.test(f));
+    const CONTRIBUTING = files.find(f => CONTRIBUTING_RE.test(f));
+    const CODE_OF_CONDUCT = files.find(f => CODE_OF_CONDUCT_RE.test(f));
 
     if (CONTRIBUTING) beginnerScore += 10;
     if (CODE_OF_CONDUCT) beginnerScore += 5;
