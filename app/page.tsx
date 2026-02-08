@@ -27,8 +27,9 @@ export default function Home() {
     try {
       const data = await analyzeRepo(url);
       setAnalysis(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unexpected error while analyzing repository.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -182,4 +183,3 @@ export default function Home() {
     </main>
   );
 }
-

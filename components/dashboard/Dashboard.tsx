@@ -1,3 +1,4 @@
+import { type ElementType } from "react";
 import { RepoAnalysis } from "@/types";
 import { Card, CardTitle } from "@/components/ui/card";
 import { ScoreRadial } from "./ScoreRadial";
@@ -129,7 +130,7 @@ function formatNumber(num: number): string {
     return num.toString();
 }
 
-function MetricBox({ label, value, icon: Icon, color }: { label: string; value: string; icon: any; color: string }) {
+function MetricBox({ label, value, icon: Icon, color }: { label: string; value: string; icon: ElementType; color: string }) {
     return (
         <div className="glass rounded-xl p-4 text-center transition-all duration-200 hover:border-slate-700 cursor-default">
             <div className="flex items-center justify-center gap-1.5 mb-2">
@@ -141,7 +142,7 @@ function MetricBox({ label, value, icon: Icon, color }: { label: string; value: 
     );
 }
 
-function ScoreBar({ label, score, max, icon: Icon }: { label: string; score: number; max: number; icon: any }) {
+function ScoreBar({ label, score, max, icon: Icon }: { label: string; score: number; max: number; icon: ElementType }) {
     const percent = (score / max) * 100;
     const colorClass = percent >= 70 ? 'bg-green-500' : percent >= 40 ? 'bg-yellow-500' : 'bg-red-500';
 
