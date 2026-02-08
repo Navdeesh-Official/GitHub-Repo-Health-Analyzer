@@ -1,7 +1,12 @@
 import { RepoAnalysis } from "@/types";
 import { Card, CardTitle } from "@/components/ui/card";
 import { ScoreRadial } from "./ScoreRadial";
-import { CheckCircle2, AlertTriangle, XCircle, GitCommit, Users, BookOpen, Scale, Star, GitFork, Bug, UserRound, ExternalLink } from "lucide-react";
+import { ActivityGraph } from "./ActivityGraph";
+import {
+    CheckCircle2, AlertTriangle, XCircle, GitCommit, Users, BookOpen,
+    Scale, Star, GitFork, Bug, UserRound, ExternalLink, Activity,
+    Box, Languages, LucideIcon
+} from "lucide-react";
 
 interface DashboardProps {
     data: RepoAnalysis;
@@ -71,6 +76,83 @@ export function Dashboard({ data }: DashboardProps) {
                 </Card>
             </div>
 
+            {/* Middle Row: Activity & Deep Dives */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Activity Graph */}
+                <Card className="lg:col-span-2">
+                    <CardTitle className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
+                            <Activity className="w-4 h-4 text-indigo-400" />
+                        </div>
+                        Commit Activity (Last Year)
+                    </CardTitle>
+                    <ActivityGraph data={data.commitHistory} />
+                </Card>
+
+                {/* Additional Metrics */}
+                <div className="space-y-6">
+                     {/* Bus Factor */}
+                     <Card>
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <h3 className="text-slate-400 text-xs uppercase tracking-wider font-semibold mb-1">Bus Factor Risk</h3>
+                                <div className="text-2xl font-bold text-white flex items-center gap-2">
+                                    {data.busFactor}%
+                                    {data.busFactor > 50 && (
+                                        <span className="text-xs bg-red-500/10 text-red-400 px-2 py-0.5 rounded-full border border-red-500/20">High Risk</span>
+                                    )}
+                                </div>
+                                <p className="text-xs text-slate-500 mt-1">
+                                    Percentage of commits by the top contributor.
+                                </p>
+                            </div>
+                            <Users className={`w-5 h-5 ${data.busFactor > 50 ? 'text-red-400' : 'text-green-400'}`} />
+                        </div>
+                    </Card>
+
+                    {/* Dependencies */}
+                    <Card>
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <h3 className="text-slate-400 text-xs uppercase tracking-wider font-semibold mb-1">Dependencies</h3>
+                                {data.dependencies ? (
+                                    <>
+                                        <div className="text-2xl font-bold text-white">
+                                            {data.dependencies.count} <span className="text-sm font-normal text-slate-500">modules</span>
+                                        </div>
+                                        <p className="text-xs text-slate-500 mt-1">
+                                            Managed via <span className="text-indigo-400">{data.dependencies.manager}</span>
+                                        </p>
+                                    </>
+                                ) : (
+                                    <div className="text-sm text-slate-500 italic mt-1">Not detected</div>
+                                )}
+                            </div>
+                            <Box className="w-5 h-5 text-indigo-400" />
+                        </div>
+                    </Card>
+
+                     {/* Languages */}
+                     <Card>
+                        <h3 className="text-slate-400 text-xs uppercase tracking-wider font-semibold mb-3 flex items-center gap-2">
+                            <Languages className="w-4 h-4" /> Languages
+                        </h3>
+                        <div className="space-y-2">
+                            {Object.entries(data.languages).slice(0, 3).map(([lang, bytes]) => {
+                                const total = Object.values(data.languages).reduce((a, b) => a + b, 0);
+                                const percent = Math.round((bytes / total) * 100);
+                                return (
+                                    <div key={lang} className="flex items-center justify-between text-sm">
+                                        <span className="text-slate-300">{lang}</span>
+                                        <span className="text-slate-500">{percent}%</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </Card>
+                </div>
+            </div>
+
             {/* Bottom Row: Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Key Checks */}
@@ -87,6 +169,7 @@ export function Dashboard({ data }: DashboardProps) {
                         <CheckItem label="License File" status={data.fileChecks.hasLicense} />
                         <CheckItem label="CONTRIBUTING.md" status={data.fileChecks.hasContributing} />
                         <CheckItem label="Code of Conduct" status={data.fileChecks.hasCodeOfConduct} />
+                        <CheckItem label="Security Policy" status={data.fileChecks.hasSecurity} />
                     </div>
                 </Card>
 
@@ -129,7 +212,7 @@ function formatNumber(num: number): string {
     return num.toString();
 }
 
-function MetricBox({ label, value, icon: Icon, color }: { label: string; value: string; icon: any; color: string }) {
+function MetricBox({ label, value, icon: Icon, color }: { label: string; value: string; icon: LucideIcon; color: string }) {
     return (
         <div className="glass rounded-xl p-4 text-center transition-all duration-200 hover:border-slate-700 cursor-default">
             <div className="flex items-center justify-center gap-1.5 mb-2">
@@ -141,7 +224,7 @@ function MetricBox({ label, value, icon: Icon, color }: { label: string; value: 
     );
 }
 
-function ScoreBar({ label, score, max, icon: Icon }: { label: string; score: number; max: number; icon: any }) {
+function ScoreBar({ label, score, max, icon: Icon }: { label: string; score: number; max: number; icon: LucideIcon }) {
     const percent = (score / max) * 100;
     const colorClass = percent >= 70 ? 'bg-green-500' : percent >= 40 ? 'bg-yellow-500' : 'bg-red-500';
 

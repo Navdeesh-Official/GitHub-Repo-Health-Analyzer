@@ -1,9 +1,20 @@
-import { RepoDetails, Contributor, RepoContent } from "@/types";
+import { RepoDetails, Contributor } from "@/types";
 
 const GITHUB_API_BASE = "https://api.github.com";
 
+async function fetchWithAuth(url: string, options: RequestInit = {}) {
+    const headers = new Headers(options.headers);
+    if (process.env.GITHUB_TOKEN) {
+        headers.set("Authorization", `Bearer ${process.env.GITHUB_TOKEN}`);
+    }
+    headers.set("Accept", "application/vnd.github.v3+json");
+
+    const res = await fetch(url, { ...options, headers });
+    return res;
+}
+
 export async function fetchRepoDetails(owner: string, name: string): Promise<RepoDetails> {
-    const res = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${name}`);
+    const res = await fetchWithAuth(`${GITHUB_API_BASE}/repos/${owner}/${name}`);
 
     if (!res.ok) {
         if (res.status === 404) throw new Error("Repository not found (or private).");
@@ -14,7 +25,7 @@ export async function fetchRepoDetails(owner: string, name: string): Promise<Rep
     const data = await res.json();
 
     // Fetch last commit date separately as updatedAt refers to meta updates
-    const lastCommitRes = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${name}/commits?per_page=1`);
+    const lastCommitRes = await fetchWithAuth(`${GITHUB_API_BASE}/repos/${owner}/${name}/commits?per_page=1`);
     let lastCommitDate = data.updated_at;
     if (lastCommitRes.ok) {
         const commitData = await lastCommitRes.json();
@@ -44,14 +55,15 @@ export async function fetchRepoDetails(owner: string, name: string): Promise<Rep
             }
             : null,
         defaultBranch: data.default_branch,
+        topics: data.topics || [],
     };
 }
 
 export async function fetchContributors(owner: string, name: string): Promise<Contributor[]> {
-    const res = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${name}/contributors?per_page=30`);
+    const res = await fetchWithAuth(`${GITHUB_API_BASE}/repos/${owner}/${name}/contributors?per_page=30`);
     if (!res.ok) return [];
     const data = await res.json();
-    return data.map((c: any) => ({
+    return data.map((c: { login: string; contributions: number; avatar_url: string }) => ({
         login: c.login,
         contributions: c.contributions,
         avatarUrl: c.avatar_url,
@@ -59,17 +71,45 @@ export async function fetchContributors(owner: string, name: string): Promise<Co
 }
 
 export async function checkFiles(owner: string, name: string, branch: string): Promise<string[]> {
-    // List root files to check for specific files like CONTRIBUTING.md, CODE_OF_CONDUCT.md
-    const res = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${name}/git/trees/${branch}?recursive=0`);
+    const res = await fetchWithAuth(`${GITHUB_API_BASE}/repos/${owner}/${name}/git/trees/${branch}?recursive=0`);
     if (!res.ok) return [];
     const data = await res.json();
-    return data.tree.map((f: any) => f.path);
+    return data.tree.map((f: { path: string }) => f.path);
 }
 
 export async function fetchReadme(owner: string, name: string): Promise<string | null> {
-    const res = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${name}/readme`, {
+    const res = await fetchWithAuth(`${GITHUB_API_BASE}/repos/${owner}/${name}/readme`, {
         headers: { 'Accept': 'application/vnd.github.raw' },
     });
     if (!res.ok) return null;
     return await res.text();
+}
+
+export async function fetchCommitActivity(owner: string, name: string): Promise<number[]> {
+    const res = await fetchWithAuth(`${GITHUB_API_BASE}/repos/${owner}/${name}/stats/participation`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.all || []; // Array of last 52 weeks
+}
+
+export async function fetchLanguages(owner: string, name: string): Promise<Record<string, number>> {
+    const res = await fetchWithAuth(`${GITHUB_API_BASE}/repos/${owner}/${name}/languages`);
+    if (!res.ok) return {};
+    return await res.json();
+}
+
+export async function fetchCommunityProfile(owner: string, name: string): Promise<unknown> {
+    const res = await fetchWithAuth(`${GITHUB_API_BASE}/repos/${owner}/${name}/community/profile`);
+    if (!res.ok) return null;
+    return await res.json();
+}
+
+export async function fetchFileContent(owner: string, name: string, path: string): Promise<string | null> {
+    const res = await fetchWithAuth(`${GITHUB_API_BASE}/repos/${owner}/${name}/contents/${path}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.content && data.encoding === 'base64') {
+        return Buffer.from(data.content, 'base64').toString('utf-8');
+    }
+    return null;
 }
