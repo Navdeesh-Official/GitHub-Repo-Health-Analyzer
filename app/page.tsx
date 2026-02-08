@@ -26,8 +26,8 @@ export default function Home() {
     try {
       const data = await analyzeRepo(url);
       setAnalysis(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
       setLoading(false);
     }
