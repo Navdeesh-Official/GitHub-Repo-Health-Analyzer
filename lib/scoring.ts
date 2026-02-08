@@ -18,8 +18,8 @@ export function calculateHealthScore(
     if (readmeContent) {
         docScore += 10; // Existence
         if (readmeContent.length > 1000) docScore += 5; // Detailed
-        if (/# (setup|install|getting started)/i.test(readmeContent)) docScore += 5;
-        if (/# (contributing|development)/i.test(readmeContent)) docScore += 5;
+        if (/#+\s*(setup|install(?:ation)?|getting started)/i.test(readmeContent)) docScore += 5;
+        if (/#+\s*(contributing|development)/i.test(readmeContent)) docScore += 5;
     } else {
         breakdown.push("Missing README.md (-30 pts)");
     }

@@ -4,8 +4,9 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RepoAnalysis } from "@/types";
-import { Loader2, Search, Github, Sparkles, Shield, Zap, LucideIcon } from "lucide-react";
+import { Loader2, Search, Github, Sparkles, Shield, Zap } from "lucide-react";
 import { Dashboard } from "@/components/dashboard/Dashboard";
+import { FeatureCard } from "@/components/ui/feature-card";
 
 export default function Home() {
   const [url, setUrl] = useState("");
@@ -31,7 +32,8 @@ export default function Home() {
 
       setAnalysis(data);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
+      const message = err instanceof Error ? err.message : "Unexpected error while analyzing repository.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -183,27 +185,5 @@ export default function Home() {
         </div>
       </footer>
     </main>
-  );
-}
-
-function FeatureCard({
-  icon: Icon,
-  title,
-  description,
-  delay
-}: {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-  delay: string;
-}) {
-  return (
-    <div className={`glass glass-hover rounded-2xl p-6 animate-slide-up cursor-default ${delay}`}>
-      <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-4 border border-indigo-500/20">
-        <Icon className="w-6 h-6 text-indigo-400" />
-      </div>
-      <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-      <p className="text-slate-400 text-sm leading-relaxed">{description}</p>
-    </div>
   );
 }

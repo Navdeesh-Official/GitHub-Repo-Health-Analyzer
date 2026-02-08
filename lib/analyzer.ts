@@ -27,22 +27,32 @@ export async function analyzeRepo(repoUrl: string): Promise<RepoAnalysis> {
     }
 
     try {
-        const details = await fetchRepoDetails(owner, name);
+        // Start independent fetches in parallel
+        const detailsPromise = fetchRepoDetails(owner, name);
+        const readmePromise = fetchReadme(owner, name);
+        const contributorsPromise = fetchContributors(owner, name);
+        const commitActivityPromise = fetchCommitActivity(owner, name);
+        const languagesPromise = fetchLanguages(owner, name);
+        const communityProfilePromise = fetchCommunityProfile(owner, name);
 
+        // Wait for details (needed for default branch)
+        const details = await detailsPromise;
+
+        // Wait for everything else, including checkFiles which needs default branch
         const [
             readme,
             contributors,
-            fileList,
             commitActivity,
             languages,
-            communityProfile
+            communityProfile,
+            fileList
         ] = await Promise.all([
-            fetchReadme(owner, name),
-            fetchContributors(owner, name),
-            checkFiles(owner, name, details.defaultBranch),
-            fetchCommitActivity(owner, name),
-            fetchLanguages(owner, name),
-            fetchCommunityProfile(owner, name)
+            readmePromise,
+            contributorsPromise,
+            commitActivityPromise,
+            languagesPromise,
+            communityProfilePromise,
+            checkFiles(owner, name, details.defaultBranch)
         ]);
 
         // Bus Factor Calculation

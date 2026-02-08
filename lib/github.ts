@@ -1,6 +1,6 @@
 import { RepoDetails, Contributor } from "@/types";
 
-const GITHUB_API_BASE = "https://api.github.com";
+const GITHUB_API_BASE = process.env.NEXT_PUBLIC_GITHUB_API_BASE || "https://api.github.com";
 
 async function fetchWithAuth(url: string, options: RequestInit = {}) {
     const headers = new Headers(options.headers);
@@ -14,7 +14,10 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
 }
 
 export async function fetchRepoDetails(owner: string, name: string): Promise<RepoDetails> {
-    const res = await fetchWithAuth(`${GITHUB_API_BASE}/repos/${owner}/${name}`);
+    const repoPromise = fetchWithAuth(`${GITHUB_API_BASE}/repos/${owner}/${name}`);
+    const lastCommitPromise = fetchWithAuth(`${GITHUB_API_BASE}/repos/${owner}/${name}/commits?per_page=1`);
+
+    const [res, lastCommitRes] = await Promise.all([repoPromise, lastCommitPromise]);
 
     if (!res.ok) {
         if (res.status === 404) throw new Error("Repository not found (or private).");
@@ -24,8 +27,6 @@ export async function fetchRepoDetails(owner: string, name: string): Promise<Rep
 
     const data = await res.json();
 
-    // Fetch last commit date separately as updatedAt refers to meta updates
-    const lastCommitRes = await fetchWithAuth(`${GITHUB_API_BASE}/repos/${owner}/${name}/commits?per_page=1`);
     let lastCommitDate = data.updated_at;
     if (lastCommitRes.ok) {
         const commitData = await lastCommitRes.json();
@@ -59,22 +60,44 @@ export async function fetchRepoDetails(owner: string, name: string): Promise<Rep
     };
 }
 
+interface GitHubContributor {
+    login: string;
+    contributions: number;
+    avatar_url: string;
+}
+
 export async function fetchContributors(owner: string, name: string): Promise<Contributor[]> {
     const res = await fetchWithAuth(`${GITHUB_API_BASE}/repos/${owner}/${name}/contributors?per_page=30`);
     if (!res.ok) return [];
-    const data = await res.json();
-    return data.map((c: { login: string; contributions: number; avatar_url: string }) => ({
+    const data = await res.json() as GitHubContributor[];
+    return data.map((c) => ({
         login: c.login,
         contributions: c.contributions,
         avatarUrl: c.avatar_url,
     }));
 }
 
+interface GitHubTreeItem {
+    path: string;
+    mode: string;
+    type: string;
+    sha: string;
+    size?: number;
+    url: string;
+}
+
+interface GitHubTreeResponse {
+    sha: string;
+    url: string;
+    tree: GitHubTreeItem[];
+    truncated: boolean;
+}
+
 export async function checkFiles(owner: string, name: string, branch: string): Promise<string[]> {
     const res = await fetchWithAuth(`${GITHUB_API_BASE}/repos/${owner}/${name}/git/trees/${branch}?recursive=0`);
     if (!res.ok) return [];
-    const data = await res.json();
-    return data.tree.map((f: { path: string }) => f.path);
+    const data = await res.json() as GitHubTreeResponse;
+    return data.tree.map((f) => f.path);
 }
 
 export async function fetchReadme(owner: string, name: string): Promise<string | null> {
