@@ -1,6 +1,6 @@
 import { RepoDetails, Contributor, RepoContent } from "@/types";
 
-const GITHUB_API_BASE = "https://api.github.com";
+const GITHUB_API_BASE = process.env.NEXT_PUBLIC_GITHUB_API_BASE || "https://api.github.com";
 
 export async function fetchRepoDetails(owner: string, name: string): Promise<RepoDetails> {
     const res = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${name}`);
