@@ -11,37 +11,17 @@ export function calculateHealthScore(
 
     // 1. Documentation Quality (30 points)
     let docScore = 0;
-    if (readmeContent) {
-        docScore += 10; // Existence
-        if (readmeContent.length > 500) docScore += 5; // Decent length
-        if (readmeContent.length > 2000) docScore += 5; // Detailed
-        if (/# installation/i.test(readmeContent) || /# setup/i.test(readmeContent)) docScore += 5;
-        if (/# usage/i.test(readmeContent)) docScore += 5;
-    } else {
-        breakdown.push("Missing README.md (-30 pts)");
-    }
-
     const hasLicense = !!repo.license;
-    if (hasLicense) {
-        // License is part of doc/health but let's separate or keep in doc
-    } else {
-        // breakdown.push("Missing License"); // Penalty handled implicitly by not gaining points? 
-        // Actually let's assume License is critical.
-        // Let's adjust Doc score mechanism.
-    }
-    // Let's stick to the plan: Doc = 30.
-    // We used 30 above for README. Let's rebalance.
 
-    // Revised Doc Score (30):
-    // README logic: 20 pts max
-    // License: 10 pts
-    docScore = 0;
     if (readmeContent) {
         docScore += 5;
         if (readmeContent.length > 1000) docScore += 5;
         if (/# (setup|install)/i.test(readmeContent)) docScore += 5;
         if (/# (contributing|development)/i.test(readmeContent)) docScore += 5;
+    } else {
+        breakdown.push("Missing README.md");
     }
+
     if (hasLicense) docScore += 10;
     else breakdown.push("Missing License file");
 
