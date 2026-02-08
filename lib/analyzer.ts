@@ -20,11 +20,15 @@ export async function analyzeRepo(repoUrl: string): Promise<RepoAnalysis> {
     }
 
     try {
-        const details = await fetchRepoDetails(owner, name);
+        const detailsPromise = fetchRepoDetails(owner, name);
+        const readmePromise = fetchReadme(owner, name);
+        const contributorsPromise = fetchContributors(owner, name);
+
+        const details = await detailsPromise;
 
         const [readme, contributors, fileList] = await Promise.all([
-            fetchReadme(owner, name),
-            fetchContributors(owner, name),
+            readmePromise,
+            contributorsPromise,
             checkFiles(owner, name, details.defaultBranch)
         ]);
 
